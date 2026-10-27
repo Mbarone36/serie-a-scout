@@ -1,0 +1,38 @@
+{
+  "_note": "Minimal hand-trimmed excerpt for parser unit tests (src/scrape_tm.py); not a copy of the Transfermarkt site. Only the keys the parser reads are kept.",
+  "transfers": [
+    {
+      "season": "24/25",
+      "from": {
+        "clubName": "Napoli"
+      },
+      "to": {
+        "clubName": "PSG"
+      },
+      "fee": "€80.00m",
+      "dateUnformatted": "2025-01-17"
+    },
+    {
+      "season": "18/19",
+      "from": {
+        "clubName": "Loko Moscow"
+      },
+      "to": {
+        "clubName": "Rustavi"
+      },
+      "fee": "End of loan",
+      "dateUnformatted": "2019-06-30"
+    },
+    {
+      "season": "18/19",
+      "from": {
+        "clubName": "Rustavi"
+      },
+      "to": {
+        "clubName": "Loko Moscow"
+      },
+      "fee": "Loan fee:<br /><i class=\"normaler-text\">€100k</i>",
+      "dateUnformatted": "2019-02-12"
+    }
+  ]
+}

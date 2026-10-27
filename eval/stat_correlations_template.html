@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hit or Bust Signals</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f6f5f2;
+    --surface-1: #fcfcfb;
+    --grid: #e6e5e0;
+    --axis: #c9c8c2;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #6f6e69;
+    --pos: #2a78d6;
+    --neg: #e34948;
+    --none: #8f8e88;
+    --border: #e2e1dc;
+    --control-bg: #ecebe7;
+    --control-on: #fcfcfb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-0: #121211;
+      --surface-1: #1a1a19;
+      --grid: #2a2a28;
+      --axis: #44443f;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #9a998f;
+      --pos: #3987e5;
+      --neg: #e66767;
+      --none: #77766f;
+      --border: #2e2e2b;
+      --control-bg: #262624;
+      --control-on: #3a3a37;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --grid: #2a2a28;
+    --axis: #44443f;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #9a998f;
+    --pos: #3987e5;
+    --neg: #e66767;
+    --none: #77766f;
+    --border: #2e2e2b;
+    --control-bg: #262624;
+    --control-on: #3a3a37;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 24px; margin: 0 0 6px; font-weight: 650; letter-spacing: -0.01em; }
+  .lede { color: var(--text-secondary); margin: 0 0 20px; max-width: 760px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .seg { display: inline-flex; background: var(--control-bg); border-radius: 8px; padding: 3px; gap: 2px; }
+  .seg button {
+    border: 0; background: transparent; color: var(--text-secondary);
+    font: inherit; font-weight: 550; padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--control-on); color: var(--text-primary); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  select {
+    font: inherit; color: var(--text-primary); background: var(--control-bg);
+    border: 0; border-radius: 8px; padding: 7px 10px;
+  }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px 20px 12px; margin-bottom: 20px; }
+  .card h2 { font-size: 16px; margin: 0 0 4px; font-weight: 620; }
+  .card .sub { color: var(--text-secondary); margin: 0 0 12px; font-size: 13px; }
+  .summary { font-size: 15px; margin: 0 0 14px; }
+  .summary strong { font-weight: 650; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .key { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart svg text { font-family: inherit; }
+  .legend svg { flex: none; }
+  .tip {
+    position: fixed; pointer-events: none; z-index: 10; max-width: 300px;
+    background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,.14);
+    opacity: 0; transition: opacity .08s;
+  }
+  .tip b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .tip .muted { color: var(--text-muted); }
+  .tip .row { display: flex; justify-content: space-between; gap: 16px; font-variant-numeric: tabular-nums; }
+  details { margin-top: 4px; }
+  summary { cursor: pointer; color: var(--text-secondary); font-weight: 550; padding: 6px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+  th { color: var(--text-secondary); font-weight: 600; }
+  td.num, th.num { text-align: right; }
+  .table-wrap { overflow-x: auto; }
+  .note { color: var(--text-muted); font-size: 12.5px; margin: 8px 0 0; max-width: 780px; }
+  @media (max-width: 640px) { main { padding-top: 20px; } .card { padding: 14px 12px 8px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Which stats separate hits from busts?</h1>
+  <p class="lede">
+    Each Serie A arrival in the training data (<span id="n-arrivals"></span> moves by
+    <span id="n-players"></span> players), with the player's numbers from the season before the move.
+    A <b>hit</b> beats the median arrival on the chosen outcome; everything else is a <b>bust</b>.
+  </p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Outcome" id="target-seg">
+      <button data-target="overall" aria-pressed="true">Overall score</button>
+      <button data-target="minutes" aria-pressed="false">Minutes</button>
+      <button data-target="output" aria-pressed="false">Output</button>
+      <button data-target="output_share" aria-pressed="false">Output share</button>
+      <button data-target="retention" aria-pressed="false">Retention</button>
+    </div>
+    <select id="group-filter" aria-label="Stat group">
+      <option value="all">All stats</option>
+      <option value="On-field stats">On-field stats</option>
+      <option value="Background">Background</option>
+      <option value="Destination club">Destination club</option>
+    </select>
+  </div>
+
+  <section class="card">
+    <h2>Correlation with being a hit</h2>
+    <p class="sub">Rank correlation, with the 95% range from resampling players. Bars point right when higher values come with more hits, left when they come with more busts.</p>
+    <p class="summary" id="summary"></p>
+    <div class="legend">
+      <span><i class="key" style="background:var(--pos)"></i>More hits — a real link</span>
+      <span><i class="key" style="background:var(--neg)"></i>More busts — a real link</span>
+      <span><svg width="14" height="10" aria-hidden="true"><rect width="14" height="10" rx="2" fill="url(#hatch-legend)"/><defs><pattern id="hatch-legend" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--none)" opacity=".35"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--none)" stroke-width="2"/></pattern></defs></svg>No real link (range crosses zero)</span>
+      <span><svg width="18" height="10" aria-hidden="true"><line x1="1" y1="5" x2="17" y2="5" stroke="var(--text-secondary)" stroke-width="1.5"/><line x1="1" y1="2" x2="1" y2="8" stroke="var(--text-secondary)" stroke-width="1.5"/><line x1="17" y1="2" x2="17" y2="8" stroke="var(--text-secondary)" stroke-width="1.5"/></svg>95% range</span>
+    </div>
+    <div class="chart" id="corr-chart"></div>
+  </section>
+
+  <section class="card">
+    <h2>Mutual information with being a hit</h2>
+    <p class="sub">scikit-learn's <code>mutual_info_classif</code>: how much knowing the stat tells you about hit vs bust, including links that aren't a straight line. The vertical line is what a stat reaches by chance (95th percentile of shuffled outcomes).</p>
+    <div class="chart" id="mi-chart"></div>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>Table view</summary>
+      <div class="table-wrap"><table id="table"></table></div>
+    </details>
+    <p class="note">
+      Correlation is not causation, and every stat is measured alongside the others — two stats that move together
+      (e.g. shots and shots on target) can both look strong even if only one matters. Stats are percentile-ranked
+      within league, season and position, exactly as the model sees them.
+    </p>
+  </section>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const DATA = __DATA__;
+const state = { target: "overall", group: "all" };
+const fmt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2);
+const pct = v => Math.round(v * 100) + "%";
+const SVGNS = "http://www.w3.org/2000/svg";
+const tip = document.getElementById("tip");
+
+document.getElementById("n-arrivals").textContent = DATA.n_arrivals.toLocaleString();
+document.getElementById("n-players").textContent = DATA.n_players.toLocaleString();
+
+function el(tag, attrs = {}, parent) {
+  const node = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+function rows() {
+  return DATA.targets[state.target].filter(r => state.group === "all" || r.group === state.group);
+}
+
+function hatchDefs(svg, id) {
+  const defs = el("defs", {}, svg);
+  const p = el("pattern", { id, width: 4, height: 4, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+  el("rect", { width: 4, height: 4, fill: "var(--none)", opacity: 0.35 }, p);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 4, stroke: "var(--none)", "stroke-width": 2 }, p);
+}
+
+function roundedBar(x0, x1, y, h, r) {
+  // 4px rounded data-end, square at the baseline (x0).
+  const right = x1 >= x0, w = Math.abs(x1 - x0), rr = Math.min(r, w, h / 2);
+  if (w < 0.5) return "";
+  if (right) return `M${x0},${y} H${x1 - rr} Q${x1},${y} ${x1},${y + rr} V${y + h - rr} Q${x1},${y + h} ${x1 - rr},${y + h} H${x0} Z`;
+  return `M${x0},${y} H${x1 + rr} Q${x1},${y} ${x1},${y + rr} V${y + h - rr} Q${x1},${y + h} ${x1 + rr},${y + h} H${x0} Z`;
+}
+
+function layout(container) {
+  const width = Math.max(320, container.clientWidth);
+  const labelW = width < 560 ? 132 : 210;
+  const valueW = 46;
+  return { width, labelW, valueW, plotL: labelW + 8, plotR: width - valueW };
+}
+
+function niceMax(v) { return Math.max(0.1, Math.ceil(v * 20) / 20); }
+
+function drawCorr() {
+  const host = document.getElementById("corr-chart");
+  host.innerHTML = "";
+  const data = rows().slice().sort((a, b) => b.r - a.r);
+  const L = layout(host), band = 24, barH = 14, top = 24, bottom = 8;
+  const height = top + data.length * band + bottom;
+  const svg = el("svg", { viewBox: `0 0 ${L.width} ${height}`, role: "img",
+    "aria-label": "Correlation of each stat with being a hit" }, host);
+  hatchDefs(svg, "hatch");
+  const m = niceMax(Math.max(...data.map(r => Math.max(Math.abs(r.low), Math.abs(r.high)))));
+  const x = v => L.plotL + (v + m) / (2 * m) * (L.plotR - L.plotL);
+  const step = m <= 0.2 ? 0.05 : 0.1, ticks = [];
+  for (let k = Math.ceil(-m / step - 1e-9); k * step <= m + 1e-9; k++) ticks.push(Math.round(k * step * 100) / 100);
+  for (const t of ticks) {
+    el("line", { x1: x(t), x2: x(t), y1: top - 6, y2: height - bottom, stroke: t === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }, svg);
+    const tx = el("text", { x: x(t), y: top - 10, "text-anchor": "middle", "font-size": 11, fill: "var(--text-muted)" }, svg);
+    tx.textContent = t === 0 ? "0" : fmt(t);
+  }
+  data.forEach((r, i) => {
+    const y = top + i * band, yc = y + band / 2;
+    const fill = !r.significant ? "url(#hatch)" : r.r > 0 ? "var(--pos)" : "var(--neg)";
+    const g = el("g", { tabindex: 0, role: "listitem", "aria-label": `${r.label}: correlation ${fmt(r.r)}, range ${fmt(r.low)} to ${fmt(r.high)}` }, svg);
+    el("rect", { x: 0, y, width: L.width, height: band, fill: "transparent" }, g);
+    const lab = el("text", { x: L.labelW, y: yc + 4, "text-anchor": "end", "font-size": 12.5, fill: "var(--text-primary)" }, g);
+    lab.textContent = r.label;
+    el("path", { d: roundedBar(x(0), x(r.r), yc - barH / 2, barH, 4), fill }, g);
+    el("line", { x1: x(r.low), x2: x(r.high), y1: yc, y2: yc, stroke: "var(--text-secondary)", "stroke-width": 1.5 }, g);
+    for (const v of [r.low, r.high]) el("line", { x1: x(v), x2: x(v), y1: yc - 4, y2: yc + 4, stroke: "var(--text-secondary)", "stroke-width": 1.5 }, g);
+    const val = el("text", { x: L.width - 2, y: yc + 4, "text-anchor": "end", "font-size": 12, fill: r.significant ? "var(--text-primary)" : "var(--text-muted)", style: "font-variant-numeric: tabular-nums" }, g);
+    val.textContent = fmt(r.r);
+    bindTip(g, r);
+  });
+}
+
+function drawMI() {
+  const host = document.getElementById("mi-chart");
+  host.innerHTML = "";
+  const data = rows().slice().sort((a, b) => b.mi - a.mi);
+  const L = layout(host), band = 24, barH = 14, top = 24, bottom = 8;
+  const height = top + data.length * band + bottom;
+  const svg = el("svg", { viewBox: `0 0 ${L.width} ${height}`, role: "img",
+    "aria-label": "Mutual information of each stat with being a hit" }, host);
+  hatchDefs(svg, "hatch-mi");
+  const floor = data.length ? data[0].mi_floor : 0;
+  const m = Math.max(0.02, Math.ceil(Math.max(floor, ...data.map(r => r.mi)) * 50) / 50);
+  const x = v => L.plotL + v / m * (L.plotR - L.plotL);
+  const step = m > 0.08 ? 0.02 : 0.01;
+  for (let t = 0; t <= m + 1e-9; t += step) {
+    const tt = Math.round(t * 100) / 100;
+    el("line", { x1: x(tt), x2: x(tt), y1: top - 6, y2: height - bottom, stroke: tt === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }, svg);
+    const tx = el("text", { x: x(tt), y: top - 10, "text-anchor": "middle", "font-size": 11, fill: "var(--text-muted)" }, svg);
+    tx.textContent = tt.toFixed(2);
+  }
+  data.forEach((r, i) => {
+    const y = top + i * band, yc = y + band / 2, above = r.mi > r.mi_floor;
+    const g = el("g", { tabindex: 0, "aria-label": `${r.label}: mutual information ${r.mi.toFixed(3)}${above ? "" : ", within chance"}` }, svg);
+    el("rect", { x: 0, y, width: L.width, height: band, fill: "transparent" }, g);
+    const lab = el("text", { x: L.labelW, y: yc + 4, "text-anchor": "end", "font-size": 12.5, fill: "var(--text-primary)" }, g);
+    lab.textContent = r.label;
+    el("path", { d: roundedBar(x(0), x(r.mi), yc - barH / 2, barH, 4), fill: above ? "var(--pos)" : "url(#hatch-mi)" }, g);
+    const val = el("text", { x: L.width - 2, y: yc + 4, "text-anchor": "end", "font-size": 12, fill: above ? "var(--text-primary)" : "var(--text-muted)", style: "font-variant-numeric: tabular-nums" }, g);
+    val.textContent = r.mi.toFixed(3);
+    bindTip(g, r);
+  });
+  el("line", { x1: x(floor), x2: x(floor), y1: top - 6, y2: height - bottom, stroke: "var(--text-secondary)", "stroke-width": 1.5 }, svg);
+  const fl = el("text", { x: x(floor) + 4, y: height - bottom - 4, "font-size": 11, fill: "var(--text-secondary)" }, svg);
+  fl.textContent = "chance level";
+}
+
+function bindTip(g, r) {
+  const show = (cx, cy) => {
+    const dir = !r.significant ? "No real link" : r.r > 0 ? "Higher → more hits" : "Higher → more busts";
+    tip.innerHTML = `<b>${r.label}</b><div class="muted">${r.group} · ${dir}</div>
+      <div class="row"><span>Correlation</span><span>${fmt(r.r)} (${fmt(r.low)} to ${fmt(r.high)})</span></div>
+      <div class="row"><span>Hit rate, top 25% on stat</span><span>${pct(r.hit_rate_top)}</span></div>
+      <div class="row"><span>Hit rate, bottom 25%</span><span>${pct(r.hit_rate_bottom)}</span></div>
+      <div class="row"><span>Mutual information</span><span>${r.mi.toFixed(3)} ${r.mi > r.mi_floor ? "" : "(chance)"}</span></div>`;
+    tip.style.opacity = 1;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.min(window.innerWidth - w - 8, cx + 14) + "px";
+    tip.style.top = Math.min(window.innerHeight - h - 8, cy + 14) + "px";
+  };
+  g.addEventListener("mousemove", e => show(e.clientX, e.clientY));
+  g.addEventListener("mouseleave", () => (tip.style.opacity = 0));
+  g.addEventListener("focus", () => { const b = g.getBoundingClientRect(); show(b.left + b.width / 2, b.top); });
+  g.addEventListener("blur", () => (tip.style.opacity = 0));
+}
+
+function drawSummary() {
+  const all = rows(), sig = all.filter(r => r.significant);
+  const pos = sig.filter(r => r.r > 0).sort((a, b) => b.r - a.r);
+  const neg = sig.filter(r => r.r < 0).sort((a, b) => a.r - b.r);
+  const names = { overall: "the overall score", minutes: "minutes", output: "output",
+                  output_share: "output as a share of the team's attack", retention: "retention" };
+  let text = `For <strong>${names[state.target]}</strong>, <strong>${sig.length} of ${all.length}</strong> stats have a real link to hits; ${all.length - sig.length} don't.`;
+  if (pos.length) text += ` Strongest towards hits: <strong>${pos[0].label}</strong> (${fmt(pos[0].r)}).`;
+  if (neg.length) text += ` Strongest towards busts: <strong>${neg[0].label}</strong> (${fmt(neg[0].r)}).`;
+  document.getElementById("summary").innerHTML = text;
+}
+
+function drawTable() {
+  const data = rows().slice().sort((a, b) => Math.abs(b.r) - Math.abs(a.r));
+  const head = `<tr><th>Stat</th><th>Group</th><th class="num">Correlation</th><th class="num">95% range</th><th class="num">Hit rate top 25%</th><th class="num">Hit rate bottom 25%</th><th class="num">Mutual info</th><th>Verdict</th></tr>`;
+  const body = data.map(r => `<tr><td>${r.label}</td><td>${r.group}</td><td class="num">${fmt(r.r)}</td><td class="num">${fmt(r.low)} to ${fmt(r.high)}</td><td class="num">${pct(r.hit_rate_top)}</td><td class="num">${pct(r.hit_rate_bottom)}</td><td class="num">${r.mi.toFixed(3)}</td><td>${!r.significant ? "No real link" : r.r > 0 ? "More hits" : "More busts"}</td></tr>`).join("");
+  document.getElementById("table").innerHTML = head + body;
+}
+
+function render() { drawSummary(); drawCorr(); drawMI(); drawTable(); }
+
+document.getElementById("target-seg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.target = b.dataset.target;
+  for (const x of e.currentTarget.querySelectorAll("button")) x.setAttribute("aria-pressed", x === b);
+  render();
+});
+document.getElementById("group-filter").addEventListener("change", e => { state.group = e.target.value; render(); });
+// Redraw whenever the chart's own width changes (window resize, a pane
+// opening), so the SVG is always laid out at the width it is shown at.
+let lastWidth = 0, resizeTimer;
+new ResizeObserver(entries => {
+  const w = Math.round(entries[0].contentRect.width);
+  if (w === lastWidth) return;
+  lastWidth = w; clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 60);
+}).observe(document.getElementById("corr-chart"));
+render();
+</script>
+</body>
+</html>

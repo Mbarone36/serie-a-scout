@@ -1,0 +1,19 @@
+# Players withheld from training entirely — every row, every fold.
+# A qualitative smell test, never a metric.
+#
+# Names are matched accent-insensitively: "Rafael Leao" will exclude "Rafael Leão" rows.
+#
+# Verify each name exists in data/processed/transfers.parquet before relying on
+# it. Kvaratskhelia's Dinamo Batumi season is almost certainly absent from FBref
+# (the Georgian Erovnuli Liga has no advanced stats); his Rubin Kazan seasons may
+# serve instead. If neither is present, drop him and note it here.
+great:
+  - Khvicha Kvaratskhelia
+  - Rafael Leao
+  - Sofyan Amrabat
+ok:
+  - Jens Petter Hauge
+  - Emil Audero
+bust:
+  - Lucas Paqueta
+  - Gonzalo Higuain

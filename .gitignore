@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+data/raw/
+data/processed/
+.pytest_cache/
+models/
+.superpowers/
+downloaded_files/
+.claude/worktrees/
+.claude/
+data/manual/unmatched_review.csv
+.DS_Store

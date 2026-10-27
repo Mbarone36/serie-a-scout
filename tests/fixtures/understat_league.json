@@ -1,0 +1,7 @@
+{"teams": {"87": {"id": "87", "title": "Napoli", "history": []}},
+ "players": [
+  {"id": "1250", "player_name": "Khvicha Kvaratskhelia", "games": "34", "time": "2577", "goals": "12", "xG": "9.481", "assists": "10", "xA": "7.802", "shots": "84", "key_passes": "66", "yellow_cards": "4", "red_cards": "0", "position": "F M", "team_title": "Napoli", "npg": "12", "npxG": "9.481", "xGChain": "17.204", "xGBuildup": "6.113"},
+  {"id": "6447", "player_name": "Tanguy Ndombele", "games": "28", "time": "1300", "goals": "1", "xG": "1.82", "assists": "1", "xA": "1.04", "shots": "18", "key_passes": "15", "yellow_cards": "5", "red_cards": "0", "position": "M S", "team_title": "Napoli,Roma", "npg": "1", "npxG": "1.06", "xGChain": "6.31", "xGBuildup": "4.9"},
+  {"id": "9001", "player_name": "M&#039;Bala Nzola", "games": "30", "time": "2250", "goals": "13", "xG": "11.2", "assists": "2", "xA": "1.5", "shots": "70", "key_passes": "20", "yellow_cards": "3", "red_cards": "0", "position": "F", "team_title": "Spezia", "npg": "10", "npxG": "8.917", "xGChain": "9.0", "xGBuildup": "1.2"}
+ ],
+ "dates": []}

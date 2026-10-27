@@ -1,0 +1,30 @@
+{
+  "_note": "Minimal hand-trimmed excerpt for parser unit tests (src/scrape_tm.py); not a copy of the Transfermarkt site. Only the keys the parser reads are kept.",
+  "list": [
+    {
+      "x": 1512687600000,
+      "y": 125000,
+      "datum_mw": "08/12/2017"
+    },
+    {
+      "x": 1568066400000,
+      "y": 1500000,
+      "datum_mw": "10/09/2019"
+    },
+    {
+      "x": 1618264800000,
+      "y": 15000000,
+      "datum_mw": "13/04/2021"
+    },
+    {
+      "x": 1703026800000,
+      "y": 80000000,
+      "datum_mw": "20/12/2023"
+    },
+    {
+      "x": 1780264800000,
+      "y": 140000000,
+      "datum_mw": "01/06/2026"
+    }
+  ]
+}

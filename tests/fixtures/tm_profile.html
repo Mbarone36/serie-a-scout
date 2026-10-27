@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- Minimal hand-trimmed excerpt for parser unit tests (src/scrape_tm.py
+     parse_player_identity / parse_club_squad_value). Not a copy of the
+     Transfermarkt site: only the few header elements the parsers select. -->
+<html>
+<head><meta charset="utf-8"><title>Player profile (test excerpt)</title></head>
+<body>
+<div class="data-header">
+<h1 class="data-header__headline-wrapper"><span class="data-header__shirt-number"> #7 </span> Khvicha <strong>Kvaratskhelia</strong> </h1>
+<ul>
+<li class="data-header__label">Date of birth/Age: <span class="data-header__content" itemprop="birthDate"> 12/02/2001 (25) </span></li>
+<li class="data-header__label">Citizenship: <span class="data-header__content" itemprop="nationality"><img alt="Georgia" class="flaggenrahmen" title="Georgia"> Georgia </span></li>
+</ul>
+<a class="data-header__market-value-wrapper" href="#"><span class="waehrung">€</span>140.00<span class="waehrung">m</span> <p class="data-header__last-update">Last update: 01/06/2026</p></a>
+</div>
+</body>
+</html>
